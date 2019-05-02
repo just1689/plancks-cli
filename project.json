@@ -1,0 +1,8 @@
+{
+  "version": "1",
+  "teamName": "planckscloud",
+  "projectName": "plancks-cloud",
+  "endpoint": "swarm1:6227",
+  "service": "service.json"
+}
+
