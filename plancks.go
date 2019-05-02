@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -21,13 +22,14 @@ var delete bool
 var get bool
 var install bool
 var version bool
+var project bool
 
 //Flags
 var filename string
 var endpoint string
 var object string
 
-const versionID = "v1.2"
+const versionID = "v1.3"
 
 func main() {
 	err := readFirst()
@@ -37,7 +39,7 @@ func main() {
 	}
 	readFlags()
 
-	if !apply && !delete && !get && !install && !version {
+	if !apply && !delete && !get && !install && !version && !project {
 		logrus.Error(errors.New("No command. Supported commands are apply, delete, get, install and version"))
 		return
 	}
@@ -80,6 +82,31 @@ func main() {
 		handleVersion()
 		return
 	}
+
+	if project {
+		handleProject()
+		return
+	}
+
+}
+
+func handleProject() {
+	//Load the project file
+	//TODO: support using a filename provided
+	b, err := ioutil.ReadFile("project.json")
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	exec.Command()
+
+
+	//Get dit revision
+
+	//Docker build
+
+
 
 }
 
