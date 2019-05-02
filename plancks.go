@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/plancks-cloud/plancks-cli/model"
 	"github.com/plancks-cloud/plancks-cli/pc"
 	"github.com/sirupsen/logrus"
 	"github.com/tidwall/pretty"
@@ -91,7 +93,6 @@ func main() {
 }
 
 func handleProject() {
-	//Load the project file
 	//TODO: support using a filename provided
 	b, err := ioutil.ReadFile("project.json")
 	if err != nil {
@@ -99,14 +100,69 @@ func handleProject() {
 		return
 	}
 
-	exec.Command()
+	//TODO: assume project v1 for now
+	project := model.ProjectV1{}
+	err = json.Unmarshal(b, &project)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
 
+	c := exec.Command("git", "rev-parse", "--short", "HEAD")
+	b, err = c.Output()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+	gitRevision := string(b)
 
-	//Get dit revision
+	tag := fmt.Sprint(project.TeamName, "/", project.ProjectName, ":", gitRevision)
 
-	//Docker build
+	//TODO: support supplied dockerfile name
+	err = exec.Command("docker", "build", "-t", tag, ".").Run()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
 
+	//////////
 
+	b, err = ioutil.ReadFile(project.Service)
+	if err != nil {
+		log.Fatalf("Failed to read file %s: '%s'\n", project.Service, err)
+	}
+
+	s := model.Service{}
+	s.Image = tag
+	b, err = json.Marshal(s)
+	if err != nil {
+		log.Fatalf("Failed marshal serivce struct: %s'\n", err)
+	}
+
+	client := &http.Client{}
+	client.Timeout = time.Second * 5
+
+	uri := fmt.Sprint(project.Endpoint, "/apply")
+	body := bytes.NewBuffer(b)
+	req, err := http.NewRequest(http.MethodPut, uri, body)
+	if err != nil {
+		log.Fatalf("http.NewRequest() failed with '%s'\n", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("client.Do() failed with '%s'\n", err)
+	}
+
+	defer resp.Body.Close()
+	b, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("ioutil.ReadAll() failed with '%s'\n", err)
+	}
+	p := pretty.Pretty(b)
+	p = pretty.Color(p, pretty.TerminalStyle)
+	fmt.Println(string(p))
 
 }
 
@@ -129,6 +185,8 @@ func readFirst() (err error) {
 		install = true
 	} else if os.Args[1] == "version" || os.Args[1] == "v" {
 		version = true
+	} else if os.Args[1] == "project" || os.Args[1] == "p" {
+		project = true
 	}
 	return
 }
