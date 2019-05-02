@@ -9,7 +9,6 @@ Info needed
 - Dockerfile to use
 - endpoint pc
 - service json
-- route json
 
 Sources of info
 - TEAM/PROJECT: `project.json`
@@ -17,15 +16,13 @@ Sources of info
 - Dockerfile: `project.json`
 - endpoint: `project.json`
 - service.json: `project.json`
-- route.json: `project.json`
 
 
 Process
 - Get **git** commit
 - `Docker build -t TEAM/PROJECT:git .` or that with other dockerfile.
 - `Docker push ...`
-- apply service.json @endpoint
-- apply route.json  @endpoint
+- mangle, apply service.json @endpoint
 - 
 
 ## Future 
